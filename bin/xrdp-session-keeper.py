@@ -344,6 +344,7 @@ def main():
         pass
 
     last_idle_poke = 0.0
+    last_connected_sync = 0.0
     while True:
         try:
             ensure_window_manager()
@@ -353,9 +354,16 @@ def main():
                 if now - last_idle_poke >= 30.0:
                     poke_idle_timeout()
                     last_idle_poke = now
+                # Synchronize session state with cloud broker every 60s while connected
+                # to neutralize any stale cloud-side disconnect timers from transient drops.
+                if now - last_connected_sync >= 60.0:
+                    spoof_session_connect(state=1)
+                    last_connected_sync = now
                 logger.debug("Real user active. Standing by...")
                 time.sleep(2)
             else:
+                # Reset connected sync timestamp so reconnect is immediately signaled on return
+                last_connected_sync = 0.0
                 # No active client connected. Engage session hold.
                 hold_session()
                 # Short grace sleep after yielding before re-checking
