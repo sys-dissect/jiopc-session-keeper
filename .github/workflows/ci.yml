@@ -1,0 +1,38 @@
+name: CI & Privacy Guard
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  audit-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Syntax Check (Python)
+        run: |
+          python -m py_compile bin/xrdp-session-keeper.py
+
+      - name: Syntax Check (Bash)
+        run: |
+          bash -n install.sh
+          bash -n uninstall.sh
+
+      - name: Privacy & Vendor Neutrality Audit
+        run: |
+          echo "Scanning codebase for PII, tokens, internal identifiers, and vendor names..."
+          FORBIDDEN="(accops|hyworks|1173601122|3387120|pnajp|10\.0\.8\.)"
+          if grep -E -ri --exclude-dir=.git --exclude-dir=.github "$FORBIDDEN" .; then
+            echo "::error::Prohibited keyword, proprietary vendor identifier, or PII detected!"
+            exit 1
+          fi
+          echo "✓ Privacy, PII, and vendor neutrality audit passed."
