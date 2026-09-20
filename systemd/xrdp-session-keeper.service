@@ -1,0 +1,14 @@
+[Unit]
+Description=JioPC XRDP Session Keeper
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/venv/bin/python %h/bin/xrdp-session-keeper.py
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
