@@ -7,6 +7,7 @@ Type=simple
 ExecStart=%h/.local/venv/bin/python %h/bin/xrdp-session-keeper.py
 Restart=always
 RestartSec=3
+KillMode=process
 StandardOutput=journal
 StandardError=journal
 

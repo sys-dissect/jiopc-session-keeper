@@ -227,10 +227,33 @@ def sanitize_pointer_state():
             env=dict(os.environ, DISPLAY=f":{DISPLAY_NUM}"),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         logger.info("Sanitized pointer state and refreshed window manager grabs.")
     except Exception as e:
         logger.warning(f"Error sanitizing pointer state: {e}")
+
+
+def ensure_window_manager():
+    """Ensure the xfwm4 window manager is running on the active display."""
+    try:
+        res = subprocess.run(
+            ["pgrep", "-u", str(USER_ID), "-x", "xfwm4"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if res.returncode != 0:
+            logger.warning("xfwm4 is not running! Reviving window manager...")
+            subprocess.Popen(
+                ["xfwm4", "--replace"],
+                env=dict(os.environ, DISPLAY=f":{DISPLAY_NUM}"),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            logger.info("Revived xfwm4 window manager.")
+    except Exception as e:
+        logger.warning(f"Error ensuring window manager: {e}")
 
 
 def hold_session():
@@ -323,6 +346,7 @@ def main():
     last_idle_poke = 0.0
     while True:
         try:
+            ensure_window_manager()
             if is_external_client_connected():
                 # Real user is currently connected. Reset idle timer every 30s.
                 now = time.time()
