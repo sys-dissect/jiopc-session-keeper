@@ -35,26 +35,42 @@ The **Session Keeper** is a lightweight, non-root background daemon running unde
 
 ---
 
-## Step 0: Getting a Working Terminal on Stock JioPC (No Hotkeys)
+## Step 0: Getting a Working Terminal via Chrome & ttyd (No Hotkeys Needed)
 
-Stock JioPC does not provide terminal icons in the start menu, and client-side operating systems (like Fedora/GNOME or macOS) often intercept keyboard shortcuts like `Alt + F2`. 
+Stock JioPC does not provide terminal icons in the start menu, has no graphical terminal emulators (`gnome-terminal`, `xterm`) pre-installed, and keyboard shortcuts (`Ctrl + Alt + T`, `Alt + F2`) are typically intercepted by your local client OS. *(Note: Previous Flatpak-based methods like PuTTY `pterm` no longer work due to sandbox portal restrictions).*
 
-However, **PuTTY** is pre-installed as a system Flatpak (`uk.org.greenend.chiark.sgtatham.putty`), which includes **`pterm`**—a pure-GTK, standalone X11 terminal. You can launch a host terminal using **100% mouse clicks**:
+Instead, you can use **`ttyd`**—a standalone, single-file web terminal that runs a full interactive Linux bash shell inside your pre-installed **Google Chrome** browser (`http://localhost:7681`). No root/sudo permissions are required.
 
-1. Open **File Manager** (double-click "Computer" or "Downloads" on the desktop).
+### Part 1: Download `ttyd` via Chrome
+1. In JioPC, open **Google Chrome** (click the desktop icon or find it in the start menu).
+2. Copy and paste this download link into the Chrome address bar, then press **Enter**:
+   ```text
+   https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
+   ```
+3. Chrome will download `ttyd.x86_64` into your **Downloads** folder (`~/Downloads`).
+   > *Tip: If Chrome shows a warning prompt saying "This file may harm your computer", click **Keep**.*
+
+### Part 2: Create the One-Click "Web Terminal" Action in File Manager
+1. Open **File Manager** (double-click the **Downloads** or **Computer** folder on your desktop).
 2. In the top menu bar, click: **`Edit` → `Configure custom actions...`**.
-3. Click the **`+`** (Add) button on the right.
+3. Click the **`+`** (Add) button on the right side.
 4. In the **Basic** tab:
-   - **Name**: `Terminal`
-   - **Command**:
+   - **Name**: `Open Web Terminal`
+   - **Description**: `Launch bash terminal in Google Chrome`
+   - **Command**: Copy and paste this exact command into the box:
      ```bash
-     flatpak run --command=pterm uk.org.greenend.chiark.sgtatham.putty -e flatpak-spawn --host bash
+     bash -c "ls ~/Downloads/ttyd* >/dev/null 2>&1 || curl -sL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 -o ~/Downloads/ttyd.x86_64; chmod +x ~/Downloads/ttyd*; pgrep -f ttyd >/dev/null || nohup ~/Downloads/ttyd* -W -p 7681 bash >/dev/null 2>&1 & sleep 1; google-chrome http://localhost:7681"
      ```
 5. In the **Appearance Conditions** tab:
    - Check **Directories** (or leave all checked).
-6. Click **OK**, then **Close**.
+6. Click **OK**, then click **Close**.
 
-👉 **Right-click anywhere inside File Manager and click `Terminal`** to launch a native host bash shell!
+### Part 3: Launch Your Terminal!
+1. **Right-click** anywhere in the empty space inside **File Manager**.
+2. Click **`Open Web Terminal`**.
+3. 👉 **Google Chrome will open a new tab at `http://localhost:7681` with your active bash terminal!**
+
+> **Note**: For all future sessions, simply right-click in File Manager and select `Open Web Terminal`, or open Chrome and navigate to `http://localhost:7681`.
 
 ---
 
