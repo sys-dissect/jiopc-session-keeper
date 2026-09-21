@@ -36,7 +36,7 @@ if [ ! -f "${VENV_DIR}/bin/python" ]; then
         uv venv "${VENV_DIR}"
     else
         echo "Using python3 -m venv..."
-        python3 -m venv "${VENV_DIR}"
+        python3 -m venv "${VENV_DIR}" 2>/dev/null || python3 -m venv --without-pip "${VENV_DIR}"
     fi
 fi
 
@@ -46,6 +46,18 @@ if ! "${VENV_DIR}/bin/python" -c "import grpc" 2>/dev/null; then
     if command -v uv >/dev/null 2>&1; then
         uv pip install --python "${VENV_DIR}/bin/python" grpcio protobuf
     else
+        # Ensure pip is present in the venv before installing packages
+        if ! "${VENV_DIR}/bin/python" -m pip --version >/dev/null 2>&1; then
+            echo "pip not found in venv (ensurepip absent). Bootstrapping pip in user-space..."
+            if command -v curl >/dev/null 2>&1; then
+                curl -sS https://bootstrap.pypa.io/get-pip.py | "${VENV_DIR}/bin/python" - --quiet
+            elif command -v wget >/dev/null 2>&1; then
+                wget -qO- https://bootstrap.pypa.io/get-pip.py | "${VENV_DIR}/bin/python" - --quiet
+            else
+                echo -e "${RED}Error: Neither curl nor wget found to bootstrap pip.${NC}"
+                exit 1
+            fi
+        fi
         "${VENV_DIR}/bin/python" -m pip install --quiet grpcio protobuf
     fi
 else
